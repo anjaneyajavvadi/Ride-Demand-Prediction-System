@@ -6,8 +6,12 @@ RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 REFERENCE_DIR = DATA_DIR / "reference"
 
+DATA_URL=(
+    "https://d37ci6vzurychx.cloudfront.net/trip-data/"
+    "{type}_tripdata_{year}-{month:02d}.parquet"
+)
 TAXI_TYPE = "yellow"
-YEAR = 2023
+YEAR = 2025
 TRAIN_MONTHS = [1, 2, 3, 4, 5, 6]
 STREAM_MONTHS = [7, 8, 9, 10, 11, 12]
 
@@ -44,3 +48,15 @@ DRIFT_P_VALUE = 0.05
 RETRAIN_WINDOW_DAYS = 30       
 
 RMSE_IMPROVEMENT_THRESHOLD = 0.95 
+
+
+COLUMNS_TO_KEEP = [
+    "tpep_pickup_datetime",
+    "tpep_dropoff_datetime",
+    "PULocationID",
+    "trip_distance",
+    "passenger_count",
+    "fare_amount",
+    "total_amount",
+]
+
