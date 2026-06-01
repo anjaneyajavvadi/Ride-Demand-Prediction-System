@@ -63,7 +63,15 @@ def process_all_months(months:list[int])->pl.DataFrame:
         frames.append(df)
         logger.info(f"Month {month}: {len(df)} hourly records")
 
-    return pl.concat(frames).sort([TIME_COL,LOCATION_COL])
+    all_df = (
+        pl.concat(frames)
+        .group_by(["pickup_hour", "PULocationID"])
+        .agg(
+            pl.sum("trip_count").alias("trip_count")
+        )
+        .sort(["pickup_hour", "PULocationID"])
+    )
+    return all_df
 
 def split_train_stream(df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
     split_date = datetime.datetime(2025, 7, 1)
