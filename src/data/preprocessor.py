@@ -31,10 +31,27 @@ def aggregate_to_hourly(df:pl.DataFrame)->pl.DataFrame:
         .group_by(["pickup_hour","PULocationID"])
         .len()
         .rename({"len":"trip_count"})
-        .sort(["pickup_hour","PULocationID"])
     )
 
-    return agg_df
+    all_hours = pl.datetime_range(
+        start=df["pickup_dt"].min().replace(minute=0, second=0, microsecond=0),
+        end=df["pickup_dt"].max().replace(minute=0, second=0, microsecond=0),
+        interval="1h",
+        eager=True
+    ).alias("pickup_hour")
+
+    all_zones = pl.Series("PULocationID", list(range(1, 264)))
+
+    full_grid = all_hours.to_frame().join(all_zones.to_frame(), how="cross")
+
+    result = (
+        full_grid
+        .join(agg_df, on=["pickup_hour", "PULocationID"], how="left")
+        .with_columns(pl.col("trip_count").fill_null(0))
+        .sort(["pickup_hour", "PULocationID"])
+    )
+
+    return result
 
 def process_all_months(months:list[int])->pl.DataFrame:
     frames=[]
