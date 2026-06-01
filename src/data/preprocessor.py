@@ -6,6 +6,7 @@ from config import (
     TIME_COL,LOCATION_COL,TARGET_COL
     )
 from src.utils.logger import logger
+import datetime
 
 def load_and_clean(path:Path)->pl.DataFrame:
     df=pl.read_parquet(path,columns=COLUMNS_TO_KEEP)
@@ -47,6 +48,16 @@ def process_all_months(months:list[int])->pl.DataFrame:
 
     return pl.concat(frames).sort([TIME_COL,LOCATION_COL])
 
+def split_train_stream(df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
+    split_date = datetime.datetime(2025, 7, 1)
+
+    train_df=df.filter(
+        pl.col("pickup_hour")<split_date
+    )
+    stream_df=df.filter(
+        pl.col("pickup_hour")>=split_date
+    )
+    return train_df,stream_df
 
 def save_splits(train_df:pl.DataFrame,stream_df:pl.DataFrame)->None:
     PROCESSED_DIR.mkdir(parents=True,exist_ok=True)
@@ -56,12 +67,12 @@ def save_splits(train_df:pl.DataFrame,stream_df:pl.DataFrame)->None:
 
 
 if __name__ == "__main__":
-    logger.info("Processing train months...")
-    train_df = process_all_months(TRAIN_MONTHS)
+    logger.info("Processing all months...")
+    data = process_all_months(TRAIN_MONTHS+STREAM_MONTHS)
 
-    logger.info("Processing stream months...")
-    stream_df = process_all_months(STREAM_MONTHS)
+    train_df,stream_df=split_train_stream(data)
 
-    save_splits(train_df, stream_df)
+    logger.info("Saving train and stream data")
+    save_splits(train_df,stream_df)
 
         
