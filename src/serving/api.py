@@ -44,6 +44,11 @@ def predict(request:PredictionRequest):
         month=request.pickup_hour.month
         is_weekend=True if day_of_week>=5 else False
         is_rush_hour=True if hour_of_day in [7,8,9,17,18,19] else False
+
+        zone_hour_avg = ZONE_HOUR_AVG.get(
+            (request.zone_id, request.pickup_hour.hour),
+            0.0  
+        )
         
         features = {
             "hour_of_day": hour_of_day,
@@ -55,10 +60,7 @@ def predict(request:PredictionRequest):
             "PULocationID": request.zone_id,
             "zone_hour_avg": zone_hour_avg,
         }
-        zone_hour_avg = ZONE_HOUR_AVG.get(
-            (request.zone_id, request.pickup_hour.hour),
-            0.0  
-        )
+        
 
         X=pd.DataFrame([features])[FEATURE_COLUMNS]
         X["PULocationID"] = X["PULocationID"].astype("category")
