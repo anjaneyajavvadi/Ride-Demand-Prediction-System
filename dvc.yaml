@@ -1,0 +1,30 @@
+stages:
+  download:
+    cmd: python -m src.data.downloader
+    deps:
+    - src/data/downloader.py
+    outs:
+    - data/raw
+  preprocess:
+    cmd: python -m src.data.preprocessor
+    deps:
+    - data/raw
+    - src/data/preprocessor.py
+    outs:
+    - data/processed/stream.parquet
+    - data/processed/train.parquest
+  feature_engineering:
+    cmd: python -m src.features.build_features
+    deps:
+    - data/processed/train.parquet
+    - src/features/build_features.py
+    outs:
+    - data/processed/train_features.parquet
+  train:
+    cmd: python -m src.training.train
+    deps:
+    - config.py
+    - data/processed/train_features.parquet
+    - src/models/train.py
+    outs:
+    - artifacts/plots
