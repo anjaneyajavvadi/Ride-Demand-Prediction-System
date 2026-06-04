@@ -1,0 +1,21 @@
+{
+  "features": [
+    "hour_of_day",
+    "day_of_week",
+    "month",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "lag_1h",
+    "lag_24h",
+    "lag_168h",
+    "rolling_mean_3h",
+    "rolling_mean_24h",
+    "rolling_mean_168h",
+    "rolling_std_24h",
+    "rolling_std_168h",
+    "zone_hour_avg",
+    "PULocationID"
+  ]
+}

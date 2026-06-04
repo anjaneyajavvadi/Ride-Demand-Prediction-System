@@ -16,3 +16,4 @@ python-dotenv
 ipykernel
 polars
 dvc
+redis

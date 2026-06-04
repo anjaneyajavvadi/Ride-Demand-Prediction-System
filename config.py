@@ -65,3 +65,8 @@ COLUMNS_TO_KEEP = [
     "total_amount",
 ]
 
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_TTL_SECONDS=60*60*24*8
+
