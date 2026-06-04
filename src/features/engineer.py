@@ -26,34 +26,6 @@ def add_time_features(df:pl.DataFrame)->pl.DataFrame:
             .dt.hour()
             .is_in([7,8,9,17,18,19])
             .alias("is_rush_hour"),
-
-            (
-                2 * np.pi *
-                pl.col("pickup_hour").dt.hour() / 24
-            )
-            .sin()
-            .alias("hour_sin"),
-
-            (
-                2 * np.pi *
-                pl.col("pickup_hour").dt.hour() / 24
-            )
-            .cos()
-            .alias("hour_cos"),
-
-            (
-                2 * np.pi *
-                pl.col("pickup_hour").dt.weekday() / 7
-            )
-            .sin()
-            .alias("dow_sin"),
-
-            (
-                2 * np.pi *
-                pl.col("pickup_hour").dt.weekday() / 7
-            )
-            .cos()
-            .alias("dow_cos"),
         ]
     )
     return time_df

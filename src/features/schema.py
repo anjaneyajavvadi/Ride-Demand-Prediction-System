@@ -3,12 +3,6 @@ FEATURE_SCHEMA = {
     "day_of_week":       {"dtype": "int8",    "min": 0,   "max": 6},
     "month":             {"dtype": "int8",    "min": 1,   "max": 12},
 
-    "hour_sin":          {"dtype": "float64", "min": -1,  "max": 1},
-    "hour_cos":          {"dtype": "float64", "min": -1,  "max": 1},
-
-    "dow_sin":           {"dtype": "float64", "min": -1,  "max": 1},
-    "dow_cos":           {"dtype": "float64", "min": -1,  "max": 1},
-
     "lag_1h":            {"dtype": "float64", "min": 0,   "max": None},
     "lag_24h":           {"dtype": "float64", "min": 0,   "max": None},
     "lag_168h":          {"dtype": "float64", "min": 0,   "max": None},

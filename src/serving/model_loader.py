@@ -22,13 +22,14 @@ class ModelLoader:
             self._model=model
             self._model_version=stage
 
-        logger.info( f"Loaded model '{model_name}' version '{stage}'")
+        logger.info(f"Loaded model '{model_name}' stage '{stage}'")
+
 
     def predict(self,X)->list[float]:
         with self._lock:
             if self._model is None:
                 raise RuntimeError("Model not loaded")
-            return [self._model(X)]
+            return self._model.predict(X).tolist()
 
     def get_version(self)->str:
         return self._model_version or "unknown"
