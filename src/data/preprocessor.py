@@ -92,7 +92,7 @@ def save_splits(train_df:pl.DataFrame,stream_df:pl.DataFrame)->None:
 
 
 if __name__ == "__main__":
-    logger.info("Processing all months...")
+    logger.info("Processing all months....")
     data = process_all_months(TRAIN_MONTHS+STREAM_MONTHS)
 
     train_df,stream_df=split_train_stream(data)

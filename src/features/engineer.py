@@ -2,6 +2,7 @@ import polars as pl
 from pathlib import Path
 from config import PROCESSED_DIR,TIME_COL,LOCATION_COL,TARGET_COL
 from src.utils.logger import logger
+import numpy as np
 
 def add_time_features(df:pl.DataFrame)->pl.DataFrame:
     time_df=df.with_columns(
@@ -25,6 +26,34 @@ def add_time_features(df:pl.DataFrame)->pl.DataFrame:
             .dt.hour()
             .is_in([7,8,9,17,18,19])
             .alias("is_rush_hour"),
+
+            (
+                2 * np.pi *
+                pl.col("pickup_hour").dt.hour() / 24
+            )
+            .sin()
+            .alias("hour_sin"),
+
+            (
+                2 * np.pi *
+                pl.col("pickup_hour").dt.hour() / 24
+            )
+            .cos()
+            .alias("hour_cos"),
+
+            (
+                2 * np.pi *
+                pl.col("pickup_hour").dt.weekday() / 7
+            )
+            .sin()
+            .alias("dow_sin"),
+
+            (
+                2 * np.pi *
+                pl.col("pickup_hour").dt.weekday() / 7
+            )
+            .cos()
+            .alias("dow_cos"),
         ]
     )
     return time_df
@@ -62,6 +91,24 @@ def add_rolling_features(df: pl.DataFrame) -> pl.DataFrame:
             .shift(1)
             .rolling_mean(24,min_samples=1)
             .alias("rolling_mean_24h"),
+
+            pl.col("trip_count")
+            .shift(1)
+            .rolling_mean(168)
+            .over("PULocationID")
+            .alias("rolling_mean_168h"),
+
+            pl.col("trip_count")
+            .shift(1)
+            .rolling_std(window_size=24)
+            .over("PULocationID")
+            .alias("rolling_std_24h"),
+
+            pl.col("trip_count")
+            .shift(1)
+            .rolling_std(168)
+            .over("PULocationID")
+            .alias("rolling_std_168h")
         ])
     
     result = (
@@ -78,7 +125,10 @@ def drop_nulls(df:pl.DataFrame)->pl.DataFrame:
         'lag_24h',
         'lag_168h',
         'rolling_mean_3h',
-        'rolling_mean_24h'
+        'rolling_mean_24h',
+        'rolling_mean_168h',
+        'rolling_std_24h',
+        'rolling_std_168h'
         ])
     return df
 
@@ -94,23 +144,9 @@ def build_features(df:pl.DataFrame)->pl.DataFrame:
     df=add_rolling_features(df)
     logger.info("Successfully added rolling features")
     df=drop_nulls(df)
-    logger.info(f"completed feature engineering new data shape {df.shape[0]} rows and {df.shape[1]} columns")
+    logger.info(f"completed feature engineering new data shape {df.shape[0]} rows & {df.shape[1]} columns")
     return df
 
-def get_feature_columns()->list[str]:
-    return [
-        "hour_of_day",
-        "day_of_week",
-        "month",
-        "is_weekend",
-        "is_rush_hour",
-        "lag_1h",
-        "lag_24h",
-        "lag_168h",
-        "rolling_mean_3h",
-        "rolling_mean_24h",
-        "PULocationID"
-    ]
 
 if __name__ == "__main__":
     df = pl.read_parquet(PROCESSED_DIR / "train.parquet")

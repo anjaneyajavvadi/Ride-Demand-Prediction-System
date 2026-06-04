@@ -5,6 +5,7 @@ DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 REFERENCE_DIR = DATA_DIR / "reference"
+ARTIFACTS_DIR= BASE_DIR/ "artifacts"
 
 DATA_URL=(
     "https://d37ci6vzurychx.cloudfront.net/trip-data/"
@@ -19,18 +20,22 @@ TARGET_COL = "trip_count"
 LOCATION_COL = "PULocationID"
 TIME_COL = "pickup_hour"
 
-MODEL_NAME = "ride_demand_xgb"
+MODEL_NAME = "ride_demand_xgboost"
 RANDOM_SEED = 42
 
 XGB_PARAMS = {
-    "n_estimators": 300,
+    "n_estimators": 2000,
     "learning_rate": 0.05,
     "max_depth": 6,
     "subsample": 0.8,
     "colsample_bytree": 0.8,
     "random_state": RANDOM_SEED,
 }
-VALIDATION_SPLIT_DATE = "2023-05-01" 
+from datetime import datetime
+
+VALIDATION_SPLIT_DATE = datetime(
+    2025, 6, 1, 0, 0, 0
+)
 
 API_HOST = "0.0.0.0"
 API_PORT = 8000

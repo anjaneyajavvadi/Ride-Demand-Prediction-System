@@ -1,0 +1,73 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: python -m src.data.downloader
+    deps:
+    - path: src/data/downloader.py
+      hash: md5
+      md5: c9b22e840a96873951708256fb44e68a
+      size: 1025
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: da153807315fe657c42866c266b8b651.dir
+      size: 829973299
+      nfiles: 12
+  preprocess:
+    cmd: python -m src.data.preprocessor
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: da153807315fe657c42866c266b8b651.dir
+      size: 829973299
+      nfiles: 12
+    - path: src/data/preprocessor.py
+      hash: md5
+      md5: 020bd0e76ee5ea59d87166c573966e44
+      size: 3263
+    outs:
+    - path: data/processed/stream.parquet
+      hash: md5
+      md5: 5041f285aa15b2eb8f6aebbc10959995
+      size: 898670
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 2868ba08aa22e604f96f540ed681bceb
+      size: 859735
+  feature_engineering:
+    cmd: python -m src.features.engineer
+    deps:
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 2868ba08aa22e604f96f540ed681bceb
+      size: 859735
+    - path: src/features/engineer.py
+      hash: md5
+      md5: fd45ca90c4f4164356370a486328b6ba
+      size: 4362
+    outs:
+    - path: data/processed/train_features.parquet
+      hash: md5
+      md5: 05b302936a869bd97e4eba2a988b074e
+      size: 14392257
+  train:
+    cmd: python -m src.training.train
+    deps:
+    - path: config.py
+      hash: md5
+      md5: 180112efdbfbe29e28e93e903d2309c5
+      size: 1494
+    - path: data/processed/train_features.parquet
+      hash: md5
+      md5: 05b302936a869bd97e4eba2a988b074e
+      size: 14392257
+    - path: src/training/train.py
+      hash: md5
+      md5: 16d25d90838b956d7710c7903fdf7b3e
+      size: 4643
+    outs:
+    - path: artifacts/plots
+      hash: md5
+      md5: a7bcc6e9c94f2b548864a9f156558a7d.dir
+      size: 366902
+      nfiles: 2

@@ -4,10 +4,10 @@ from src.utils.logger import logger
 from config import RAW_DIR,DATA_URL,YEAR,TAXI_TYPE
 
 
-def download_data(self):
+def download_data():
     logger.info(f"Started downloading data of year: {YEAR}")
     if not os.path.exists(RAW_DIR):
-        logger.info(f"{RAW_DIR} does not exist. creating a new dir")
+        logger.info(f"{RAW_DIR} does not exist. creating a new directory")
         os.makedirs(RAW_DIR, exist_ok=True)
 
 
@@ -27,6 +27,10 @@ def download_data(self):
 
         except Exception as e:
             logger.error(f"Failed month {month:02d}: {e}")
+
+
+if __name__=="__main__":
+    download_data()
         
 
 
