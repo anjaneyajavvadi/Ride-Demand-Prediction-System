@@ -49,13 +49,16 @@ def load_training_data(df=pl.DataFrame)->tuple:
     X_val["PULocationID"]=X_val["PULocationID"].astype("category")
     logger.info("Created train and validation splits")
 
-    return X_train,y_train,X_val,y_val,val_df
+    return X_train,y_train,X_val,y_val,val_df,zone_hour_avg
 
 def train(df):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT)
 
-    X_train,y_train,X_val,y_val,val_df=load_training_data(df)
+    X_train,y_train,X_val,y_val,val_df,zone_hour_avg=load_training_data(df)
+    
+    zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
+    mlflow.log_artifact(str(PROCESSED_DIR / "zone_hour_avg.parquet"))
 
     with mlflow.start_run():
         mlflow.set_tags({
