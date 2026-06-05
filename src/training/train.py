@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import polars as pl
 import mlflow
-from config import VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,ARTIFACTS_DIR
+from config import VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,ARTIFACTS_DIR,RANDOM_SEED,REFERENCE_DIR
 from src.training.evaluate import compute_metrics,plot_predictions
 from src.features.schema import FEATURE_COLUMNS,FEATURE_SCHEMA
 import xgboost as xgb
@@ -38,8 +38,12 @@ def load_training_data(df=pl.DataFrame)->tuple:
         on=["PULocationID", "hour_of_day"],
         how="left"
     )
-  
 
+    reference=train_df.select(FEATURE_COLUMNS+[TARGET_COL]).sample(n=5000,seed=RANDOM_SEED)
+    reference.write_parquet(REFERENCE_DIR / "reference.parquet")
+        
+    zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
+    
     X_train=train_df.select(FEATURE_COLUMNS).to_pandas()
     y_train=train_df[TARGET_COL].to_pandas()
     X_val=val_df.select(FEATURE_COLUMNS).to_pandas()
@@ -49,16 +53,14 @@ def load_training_data(df=pl.DataFrame)->tuple:
     X_val["PULocationID"]=X_val["PULocationID"].astype("category")
     logger.info("Created train and validation splits")
 
-    return X_train,y_train,X_val,y_val,val_df,zone_hour_avg
+    return X_train,y_train,X_val,y_val,val_df
 
 def train(df):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT)
 
-    X_train,y_train,X_val,y_val,val_df,zone_hour_avg=load_training_data(df)
-    
-    zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
-    mlflow.log_artifact(str(PROCESSED_DIR / "zone_hour_avg.parquet"))
+    X_train,y_train,X_val,y_val,val_df=load_training_data(df)
+
 
     with mlflow.start_run():
         mlflow.set_tags({
@@ -83,6 +85,8 @@ def train(df):
             {"features": FEATURE_COLUMNS},
             "feature_columns.json"
         )
+        mlflow.log_artifact(str(PROCESSED_DIR / "zone_hour_avg.parquet"))
+        mlflow.log_artifact(str(REFERENCE_DIR / "reference.parquet"))
 
         logger.info("Initialising XGBoost model")
 
