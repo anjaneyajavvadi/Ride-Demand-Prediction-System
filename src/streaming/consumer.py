@@ -7,7 +7,8 @@ from config import (
 )
 from src.serving.feature_store import FeatureStore
 from src.utils.logger import logger
-
+from src.monitoring.drift_detector import check_drift
+import traceback
 featurestore=FeatureStore()
 
 def get_consumer()->KafkaConsumer:
@@ -46,17 +47,23 @@ def consume(on_window_ready=None):
             try:
                 on_window_ready(batch)
             except Exception as e:
-                logger.error(
-                    f"Window callback failed: {e}"
-                )
+                logger.error(traceback.format_exc())
             batch.clear()
         
 
         if total % 10000 == 0:
             logger.info(f"Consumed {total} messages total")
 
+
+def on_window_ready(batch: list[dict]) -> None:
+    should_retrain = check_drift(batch)
+    if should_retrain:
+        logger.info(200*"*")
+        logger.info("retrain needed")
+        logger.info(200*"*")
+
 if __name__=='__main__':
-    consume()
+    consume(on_window_ready=on_window_ready)
 
 
 

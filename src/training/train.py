@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import polars as pl
 import mlflow
-from config import VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,ARTIFACTS_DIR,RANDOM_SEED,REFERENCE_DIR
+from config import VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,ARTIFACTS_DIR,RANDOM_SEED,REFERENCE_DIR,DRIFT_COLUMNS
 from src.training.evaluate import compute_metrics,plot_predictions
 from src.features.schema import FEATURE_COLUMNS,FEATURE_SCHEMA
 import xgboost as xgb
@@ -39,7 +39,7 @@ def load_training_data(df=pl.DataFrame)->tuple:
         how="left"
     )
 
-    reference=train_df.select(FEATURE_COLUMNS+[TARGET_COL]).sample(n=5000,seed=RANDOM_SEED)
+    reference=train_df.select(DRIFT_COLUMNS).sample(n=5000,seed=RANDOM_SEED)
     reference.write_parquet(REFERENCE_DIR / "reference.parquet")
         
     zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
