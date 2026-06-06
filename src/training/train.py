@@ -39,8 +39,19 @@ def load_training_data(df=pl.DataFrame)->tuple:
         how="left"
     )
 
-    reference=train_df.select(DRIFT_COLUMNS).sample(n=5000,seed=RANDOM_SEED)
-    reference.write_parquet(REFERENCE_DIR / "reference.parquet")
+    hourly_ref = (
+    train_df.group_by("pickup_hour")
+    .agg([
+        pl.col("trip_count").sum().alias("total_demand"),
+        pl.col("trip_count").mean().alias("avg_demand"),
+        pl.col("trip_count").std().alias("std_demand"),
+        pl.col("trip_count").max().alias("peak_demand"),
+    ])
+    .sort("pickup_hour")
+    .drop("pickup_hour")
+)
+
+    hourly_ref.write_parquet(REFERENCE_DIR / "reference.parquet")
         
     zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
     
@@ -105,7 +116,6 @@ def train(df):
             eval_set=[(X_val, y_val)],
             verbose=100,
         )
-
 
         logger.info("Model training Successful, computing metrics")
         train_pred = model.predict(X_train)

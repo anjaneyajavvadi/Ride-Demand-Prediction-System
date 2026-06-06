@@ -82,15 +82,20 @@ def _batch_to_dataframe(batch: list[dict]) -> pd.DataFrame:
         "zone_id": pl.Int64,
     })
 
-    df = df.with_columns([
-        pl.col("pickup_hour").dt.hour().alias("hour_of_day"),
-        pl.col("pickup_hour").dt.weekday().alias("day_of_week"),
-        pl.col("pickup_hour").dt.month().alias("month"),
-        (pl.col("pickup_hour").dt.weekday() >= 5).alias("is_weekend"),
-        pl.col("pickup_hour").dt.hour().is_in([7,8,9,17,18,19]).alias("is_rush_hour"),
-    ])
 
-    return df.select(DRIFT_COLUMNS).to_pandas()
+    hourly = (
+        df.group_by("pickup_hour")
+        .agg([
+            pl.col("trip_count").sum().alias("total_demand"),
+            pl.col("trip_count").mean().alias("avg_demand"),
+            pl.col("trip_count").std().alias("std_demand"),
+            pl.col("trip_count").max().alias("peak_demand"),
+        ])
+        .sort("pickup_hour")
+    )
+
+
+    return hourly.select(DRIFT_COLUMNS).to_pandas()
 
 
 def _extract_drift_share(result: dict) -> float:
@@ -103,12 +108,12 @@ def _extract_drift_share(result: dict) -> float:
 def _save_report(report) -> None:
     reports_dir = Path("artifacts/drift_reports")
     reports_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%dT_%H%M%S")
     path = reports_dir / f"drift_report_{timestamp}.html"
     try:
         report.save_html(str(path))
     except AttributeError:
-        # fallback for newer Evidently versions
+    
         with open(path, "w") as f:
             f.write(report._inner_suite.get_html())
     logger.info(f"Drift report saved: {path}")

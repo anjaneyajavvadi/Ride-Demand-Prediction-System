@@ -72,11 +72,9 @@ REDIS_DB=0
 REDIS_TTL_SECONDS=60*60*24*8
 
 DRIFT_COLUMNS = [
-    "hour_of_day",
-    "day_of_week",
-    "month",
-    "is_weekend",
-    "is_rush_hour",
-    "trip_count"
+    "total_demand",
+    "avg_demand",
+    "std_demand",
+    "peak_demand",
 ]
 

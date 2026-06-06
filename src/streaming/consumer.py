@@ -32,27 +32,28 @@ def consume(on_window_ready=None):
     consumer=get_consumer()
     batch=[]
     total=0
+    current_week=None
 
     logger.info(f"Starting consumer on topic '{KAFKA_TOPIC}'")
 
     for message in consumer:
         data=message.value
         process_message(data)
-        batch.append(data)
-        total+=1
 
-        if(len(batch)>=CONSUMER_WINDOW_SIZE):
-            logger.info(f"Window ready: {len(batch)} messages")
+        msg_dt=datetime.fromisoformat(data['pickup_hour'])
+        msg_week=(msg_dt.year,msg_dt.isocalendar()[1])
 
-            try:
+        if current_week is None:
+            current_week=msg_week
+
+        if current_week!=msg_week:
+            if on_window_ready and batch:
+                logger.info(f"Week {current_week} window ready: {len(batch)} messages")
                 on_window_ready(batch)
-            except Exception as e:
-                logger.error(traceback.format_exc())
-            batch.clear()
-        
 
-        if total % 10000 == 0:
-            logger.info(f"Consumed {total} messages total")
+            batch=[]
+            current_week=msg_week
+        batch.append(data)
 
 
 def on_window_ready(batch: list[dict]) -> None:
