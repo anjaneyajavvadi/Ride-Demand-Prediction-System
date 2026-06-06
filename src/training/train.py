@@ -3,7 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import polars as pl
 import mlflow
-from config import VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,ARTIFACTS_DIR,RANDOM_SEED,REFERENCE_DIR,DRIFT_COLUMNS
+from config import (
+    VALIDATION_SPLIT_DATE,TARGET_COL,MLFLOW_TRACKING_URI,
+    MLFLOW_EXPERIMENT,MODEL_NAME,XGB_PARAMS,PROCESSED_DIR,
+    ARTIFACTS_DIR,RANDOM_SEED,REFERENCE_DIR,DRIFT_COLUMNS,
+    CURRENT_REFERENCE,ORIGINAL_REFERENCE,ORIGINAL_ZONE_HOUR_AVG,
+    CURRENT_ZONE_HOUR_AVG
+)
 from src.training.evaluate import compute_metrics,plot_predictions
 from src.features.schema import FEATURE_COLUMNS,FEATURE_SCHEMA
 import xgboost as xgb
@@ -51,9 +57,19 @@ def load_training_data(df=pl.DataFrame)->tuple:
     .drop("pickup_hour")
 )
 
-    hourly_ref.write_parquet(REFERENCE_DIR / "reference.parquet")
+    # only save original if it doesn't exist
+    if not ORIGINAL_REFERENCE.exists():
+        hourly_ref.write_parquet(ORIGINAL_REFERENCE)
+        logger.info("Original reference saved")
+
+    # always update current reference
+    hourly_ref.write_parquet(CURRENT_REFERENCE)
         
-    zone_hour_avg.write_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
+    if not ORIGINAL_ZONE_HOUR_AVG.exists():
+        zone_hour_avg.write_parquet(ORIGINAL_ZONE_HOUR_AVG)
+        logger.info("Original zone_hour_avg saved")
+
+    zone_hour_avg.write_parquet(CURRENT_ZONE_HOUR_AVG)
     
     X_train=train_df.select(FEATURE_COLUMNS).to_pandas()
     y_train=train_df[TARGET_COL].to_pandas()
@@ -96,8 +112,8 @@ def train(df):
             {"features": FEATURE_COLUMNS},
             "feature_columns.json"
         )
-        mlflow.log_artifact(str(PROCESSED_DIR / "zone_hour_avg.parquet"))
-        mlflow.log_artifact(str(REFERENCE_DIR / "reference.parquet"))
+        mlflow.log_artifact(str(ORIGINAL_ZONE_HOUR_AVG))
+        mlflow.log_artifact(str(ORIGINAL_REFERENCE))
 
         logger.info("Initialising XGBoost model")
 
@@ -165,7 +181,7 @@ def train(df):
         mlflow.xgboost.log_model(
             model,
             name="model",
-                registered_model_name="ride_demand_xgboost"
+                registered_model_name=MODEL_NAME
         )
 
 

@@ -39,6 +39,7 @@ VALIDATION_SPLIT_DATE = datetime(
 
 API_HOST = "0.0.0.0"
 API_PORT = 8000
+API_CALL_HOST = "localhost"
 
 KAFKA_BOOTSTRAP = "localhost:9092"
 KAFKA_TOPIC = "ride_events"
@@ -78,3 +79,12 @@ DRIFT_COLUMNS = [
     "peak_demand",
 ]
 
+DRIFT_SCORE_THRESHOLD = 0.1      
+DRIFT_COLUMN_COUNT_THRESHOLD = 2  
+
+REFERENCE_DIR = BASE_DIR / "data" / "reference"
+ORIGINAL_REFERENCE = REFERENCE_DIR / "reference_original.parquet"  # never touched after first run
+CURRENT_REFERENCE = REFERENCE_DIR / "reference_current.parquet"    # updated after each retrain
+
+ORIGINAL_ZONE_HOUR_AVG = PROCESSED_DIR / "zone_hour_avg_original.parquet"
+CURRENT_ZONE_HOUR_AVG  = PROCESSED_DIR / "zone_hour_avg_current.parquet"

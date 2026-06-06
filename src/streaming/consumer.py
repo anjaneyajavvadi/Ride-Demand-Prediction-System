@@ -8,6 +8,7 @@ from config import (
 from src.serving.feature_store import FeatureStore
 from src.utils.logger import logger
 from src.monitoring.drift_detector import check_drift
+from src.retraining.retrain import retrain_pipeline
 import traceback
 featurestore=FeatureStore()
 
@@ -17,7 +18,7 @@ def get_consumer()->KafkaConsumer:
         bootstrap_servers=KAFKA_BOOTSTRAP,
         value_deserializer=lambda v:json.loads(v.decode("utf-8")),
         auto_offset_reset="earliest",   # start from beginning of topic
-        group_id="ride-demand-consumer",
+        group_id="ride-demand-consumer-v5",
         enable_auto_commit=True,
     )
 
@@ -60,8 +61,10 @@ def on_window_ready(batch: list[dict]) -> None:
     should_retrain = check_drift(batch)
     if should_retrain:
         logger.info(200*"*")
-        logger.info("retrain needed")
+        logger.info("starting retraining")
         logger.info(200*"*")
+        trigger_ts = datetime.fromisoformat(batch[-1]["pickup_hour"])
+        retrain_pipeline(trigger_timestamp=trigger_ts)
 
 if __name__=='__main__':
     consume(on_window_ready=on_window_ready)

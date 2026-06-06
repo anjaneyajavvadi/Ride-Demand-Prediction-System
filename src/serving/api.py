@@ -1,6 +1,6 @@
 from fastapi import FastAPI,HTTPException
 from src.serving.schema import PredictionRequest,PredictionResponse
-from config import API_HOST,API_PORT,PROCESSED_DIR
+from config import API_HOST,API_PORT,PROCESSED_DIR,CURRENT_ZONE_HOUR_AVG,ORIGINAL_ZONE_HOUR_AVG
 import polars as pl
 from src.serving.model_loader import ModelLoader
 from src.serving.feature_store import FeatureStore
@@ -12,6 +12,15 @@ from contextlib import asynccontextmanager
 model_loader=ModelLoader()
 featurestore=FeatureStore()
 
+def _load_zone_hour_avg() -> dict:
+    path = CURRENT_ZONE_HOUR_AVG if CURRENT_ZONE_HOUR_AVG.exists() else ORIGINAL_ZONE_HOUR_AVG
+    df = pl.read_parquet(path)
+    lookup = {}
+    for row in df.iter_rows(named=True):
+        lookup[(row["PULocationID"], row["hour_of_day"])] = row["zone_hour_avg"]
+    logger.info(f"Loaded {len(lookup)} zone-hour averages from {path.name}")
+    return lookup
+
 ZONE_HOUR_AVG: dict = {}
 
 @asynccontextmanager
@@ -19,10 +28,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up - loading model")
     model_loader.load()
     logger.info("Model ready")
-    df = pl.read_parquet(PROCESSED_DIR / "zone_hour_avg.parquet")
-    for row in df.iter_rows(named=True):
-        key = (row["PULocationID"], row["hour_of_day"])
-        ZONE_HOUR_AVG[key] = row["zone_hour_avg"]
+    ZONE_HOUR_AVG=_load_zone_hour_avg()
     yield
     logger.info("Shutting down")
 

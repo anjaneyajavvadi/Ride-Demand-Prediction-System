@@ -55,19 +55,19 @@ stages:
     deps:
     - path: config.py
       hash: md5
-      md5: 8eebe4dd5f63642e90a7113002e5c573
-      size: 1714
+      md5: 3490431cbbe822c5e7f21bc873bd1213
+      size: 2213
     - path: data/processed/train_features.parquet
       hash: md5
       md5: 5080c714f17a93f080824c2481ebcded
       size: 14276118
     - path: src/training/train.py
       hash: md5
-      md5: 021932423b0b116e1a12802ed8d23395
-      size: 5323
+      md5: d2d273917dff967f59ace59998a53250
+      size: 5776
     outs:
     - path: artifacts/plots
       hash: md5
-      md5: c3d11010717ca926b7643e8a59f0b430.dir
-      size: 1469343
-      nfiles: 8
+      md5: f1c86699c3f0f7621a7244854e037565.dir
+      size: 1653141
+      nfiles: 9
