@@ -52,44 +52,32 @@ def add_lag_features(df:pl.DataFrame)->pl.DataFrame:
     return lag_df
 
 def add_rolling_features(df: pl.DataFrame) -> pl.DataFrame:
-    def compute_rolling(group: pl.DataFrame) -> pl.DataFrame:
-        return group.with_columns([
-            pl.col("trip_count")
-            .shift(1)
-            .rolling_mean(3,min_samples=1)
+    lagged = pl.col("trip_count").shift(1)
+
+    return (
+        df.sort(["PULocationID", "pickup_hour"])
+        .with_columns([
+            lagged.rolling_mean(3, min_samples=1)
+            .over("PULocationID")
             .alias("rolling_mean_3h"),
-            
-            pl.col("trip_count")
-            .shift(1)
-            .rolling_mean(24,min_samples=1)
+
+            lagged.rolling_mean(24, min_samples=1)
+            .over("PULocationID")
             .alias("rolling_mean_24h"),
 
-            pl.col("trip_count")
-            .shift(1)
-            .rolling_mean(168)
+            lagged.rolling_mean(168, min_samples=1)
             .over("PULocationID")
             .alias("rolling_mean_168h"),
 
-            pl.col("trip_count")
-            .shift(1)
-            .rolling_std(window_size=24)
+            lagged.rolling_std(24)
             .over("PULocationID")
             .alias("rolling_std_24h"),
 
-            pl.col("trip_count")
-            .shift(1)
-            .rolling_std(168)
+            lagged.rolling_std(168)
             .over("PULocationID")
-            .alias("rolling_std_168h")
+            .alias("rolling_std_168h"),
         ])
-    
-    result = (
-        df.sort(["PULocationID", "pickup_hour"])
-        .group_by("PULocationID")
-        .map_groups(compute_rolling)
-        .sort(["PULocationID", "pickup_hour"])
     )
-    return result
 
 def drop_nulls(df:pl.DataFrame)->pl.DataFrame:
     df=df.drop_nulls(subset=[

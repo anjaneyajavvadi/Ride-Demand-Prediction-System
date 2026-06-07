@@ -92,7 +92,6 @@ def train(df):
     with mlflow.start_run():
         mlflow.set_tags({
             "model":"XGBoost",
-            "version":"0.1",
             "name":"ride_analysis_xgboost"
         })
 
